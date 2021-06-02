@@ -10,13 +10,13 @@
         
         {% for user in userfavorites_list %}
             <h2>{{user.customer_name}}</h2>
-            <ol>
+            <ul>
                 {% for seller in user.sellers %}
                 <li>
                     {{ seller.seller_name }}
                 </li>
                 {% endfor %}
-            </ol>
+            </ul>
         {% endfor %}
     </body>
 </html>
