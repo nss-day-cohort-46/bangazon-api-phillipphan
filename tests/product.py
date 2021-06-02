@@ -98,3 +98,5 @@ class ProductTests(APITestCase):
     # TODO: Delete product
 
     # TODO: Product can be rated. Assert average rating exists.
+    # def test_rate_product(self):
+
