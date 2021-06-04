@@ -68,6 +68,14 @@ class Product(SafeDeleteModel):
             avg = 0
         return avg
 
+    @property
+    def liked(self):
+        return self.__liked
+    
+    @liked.setter
+    def liked(self, value):
+        self.__liked = value
+
     class Meta:
         verbose_name = ("product")
         verbose_name_plural = ("products")

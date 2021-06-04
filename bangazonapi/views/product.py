@@ -1,4 +1,5 @@
 """View module for handling requests about products"""
+from bangazonapi.models.customerlikes import CustomerLikes
 from rest_framework.decorators import action
 from bangazonapi.models.recommendation import Recommendation
 import base64
@@ -306,3 +307,78 @@ class Products(ViewSet):
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         return Response(None, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @action(methods=['post', 'delete'], detail=True)
+    def like(self, request, pk=None):
+        if request.method == "POST":
+            product = Product.objects.get(pk=pk)
+            customer = Customer.objects.get(user=request.auth.user)
+
+            try:
+                like_product = CustomerLikes.objects.get(
+                    product=product, customer=customer
+                )
+                return Response(
+                    {'message': 'Customer already liked this product.'},
+                    status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                )
+            except CustomerLikes.DoesNotExist:
+                like_product = CustomerLikes()
+                like_product.product = product
+                like_product.customer = customer
+                like_product.save()
+
+                return Response({}, status=status.HTTP_201_CREATED)
+
+        elif request.method == "DELETE":
+            try:
+                product = Product.objects.get(pk=pk)
+            except Product.DoesNotExist:
+                return Response(
+                    {'message': 'Product does not exist.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            customer = Customer.objects.get(user=request.auth.user)
+
+            try:
+                like_product = CustomerLikes.objects.get(
+                    product=product, customer=customer
+                )
+                like_product.delete()
+                return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+            except CustomerLikes.DoesNotExist:
+                return Response(
+                    {'message': 'Not currently liked'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        return Response({}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @action(methods=['get'], detail = False)
+    def liked(self,request):
+        if request.method == "GET":
+            customer = Customer.objects.get(user=request.auth.user)
+            products = Product.objects.all()
+
+            liked_products = []
+            
+            for product in products:
+                product.liked = None
+
+                try:
+                    CustomerLikes.objects.get(product=product, customer=customer)
+                    product.liked = True
+                except CustomerLikes.DoesNotExist:
+                    product.liked = False
+                
+                if product.liked == True:
+                    liked_products.append(product)
+            
+            serializer = ProductSerializer(
+                liked_products, many=True, context={'request': request}
+            )
+            return Response(serializer.data)
+
+                
