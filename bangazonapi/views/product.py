@@ -250,6 +250,7 @@ class Products(ViewSet):
         order = self.request.query_params.get('order_by', None)
         direction = self.request.query_params.get('direction', None)
         number_sold = self.request.query_params.get('number_sold', None)
+        location = self.request.query_params.get('location', None)
         price = self.request.query_params.get('min_price', None)
 
         if order is not None:
@@ -273,6 +274,11 @@ class Products(ViewSet):
                     return True
                 return False
 
+            products = filter(sold_filter, products)
+        
+        if location is not None:
+            products = products.filter(location__contains=location)
+            
         if price is not None:
             def price_filter(product):
                 if product.price >= int(price):
